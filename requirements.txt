@@ -1,3 +1,2 @@
 pandas==1.5.1
 requests==2.29.0
-json==2.0.9
