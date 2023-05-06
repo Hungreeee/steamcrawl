@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: steammy
-Version: 0.1.1
+Version: 0.1.2
 Summary: A package that helps extract Steam market data as pandas DataFrame for better readabilty and usage.
 Home-page: https://github.com/Hungreeee/steammy
 Author: Hungreeee

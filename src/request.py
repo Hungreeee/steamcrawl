@@ -3,11 +3,11 @@ import json
 import pandas as pd
 import warnings
 
-from steammy.exceptions import exception
+from src.exceptions import exception
 
 warnings.simplefilter(action = "ignore", category = RuntimeWarning)
 
-class Steammy:
+class Request:
 
   def __init__(self):
     self.headers = {
