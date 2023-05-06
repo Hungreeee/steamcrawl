@@ -3,7 +3,7 @@ import json
 import pandas as pd
 import warnings
 
-from src.exceptions import exception
+from exceptions import exception
 
 warnings.simplefilter(action = "ignore", category = RuntimeWarning)
 

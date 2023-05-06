@@ -1,6 +1,9 @@
 LICENSE
 README.md
 setup.py
+steammy/__init__.py
+steammy/exceptions.py
+steammy/request.py
 steammy.egg-info/PKG-INFO
 steammy.egg-info/SOURCES.txt
 steammy.egg-info/dependency_links.txt
