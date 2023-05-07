@@ -2,12 +2,10 @@ import requests
 import json
 import pandas as pd
 import warnings
-
-from steammy.exceptions import exception
+from seleniumwire import webdriver
+from steamcrawl.exceptions import exception
 
 warnings.simplefilter(action = "ignore", category = RuntimeWarning)
-
-
 
 
 class Request:
@@ -16,9 +14,10 @@ class Request:
     self.headers = {
       'Cookie': ''
     }
-    self.__listings_api = 'https://steamcommunity.com/market/search/render/?search_descriptions=0&norender=1'
+    self.__all_listings_api = 'https://steamcommunity.com/market/search/render/?search_descriptions=0&norender=1'
     self.__appid_api = 'https://api.steampowered.com/ISteamApps/GetAppList/v2/'
     self.__pricehistory_api = 'https://steamcommunity.com/market/pricehistory/'
+    self.__item_overview_api = 'https://steamcommunity.com/market/priceoverview/'
     self.__listingshistory_api = 'https://steamcommunity.com/market/myhistory/render/?norender=1'
     self.__appdetails_api = 'https://store.steampowered.com/api/appdetails/'
 
@@ -79,7 +78,7 @@ class Request:
       'count': count
     }
 
-    jsonObject = self.__request_helper(self.__listings_api, params, self.headers, ['results'])[0]
+    jsonObject = self.__request_helper(self.__all_listings_api, params, self.headers, ['results'])[0]
 
     if count == 0:
       return pd.DataFrame()
@@ -94,7 +93,7 @@ class Request:
 
       for i in range(0, count - remainCount, 100):
         params['start'] = i
-        jsonObject = self.__request_helper(self.__listings_api, params, self.headers, ['results'])[0]
+        jsonObject = self.__request_helper(self.__all_listings_api, params, self.headers, ['results'])[0]
         dfCombined.append(pd.json_normalize(jsonObject))
 
       if remainCount == 0:
@@ -102,7 +101,7 @@ class Request:
       
       else:
         params['count'] = remainCount
-        jsonObject = self.__request_helper(self.__listings_api, params, self.headers, ['results'])[0]
+        jsonObject = self.__request_helper(self.__all_listings_api, params, self.headers, ['results'])[0]
         dfCombined.append(pd.json_normalize(jsonObject))
         return pd.concat(dfCombined, ignore_index=True)
     
@@ -129,6 +128,28 @@ class Request:
     jsonObject = self.__request_helper(self.__appdetails_api, params, self.headers, [appid])[0]['data']
     return pd.json_normalize(jsonObject)
   
+
+  def get_item_overview(self, item_name: str, appid: str):
+    """
+    """
+    exception('type', item_name, str, "Input item_name it not a valid string type.")
+    exception('type', appid, str, "Input appid it not a valid string type.")
+    exception('network', self.headers['Cookie'], '', 
+      "Cookie not authorized. Please set your steamLoginSecure first using set_steam_auth().")
+    if appid != '':
+      exception('contain', int(appid), list(self.get_all_appid()['appid']), 
+        f"{appid} is not a valid appid. Please check the complete list using get_all_appid().")
+
+    params = {
+      'appid': appid,
+      'market_hash_name': item_name
+    }
+    requestObject = requests.get(self.__item_overview_api, params=params, headers=self.headers, timeout=1.0)
+    contentObject = json.loads(requestObject.content)
+    isSuccess = contentObject['success']
+    exception('network', isSuccess, False, "Steam cannot make this API call. Please double check your parameters and try again.")
+    return pd.json_normalize(contentObject).drop(['success'], axis=1)
+    
 
   def get_price_history(self, item_name: str, appid: str):
     """
@@ -276,4 +297,64 @@ class Request:
         jsonObjectList = self.__request_helper(self.__listingshistory_api, params, self.headers, ['assets', 'events', 'listings', 'purchases'])
         dfCombined.append(self.__market_history_helper(jsonObjectList))
         return pd.concat(dfCombined).reset_index(drop=True)
+      
+  def get_buysell_orders(self, item_name: str, appid: str): 
+    """
+    """
+    exception('type', item_name, str, "Input item_name it not a valid string type.")
+    exception('type', appid, str, "Input appid it not a valid string type.")
+    exception('network', self.headers['Cookie'], '', 
+      "Cookie not authorized. Please set your steamLoginSecure first using set_steam_auth().")
+    if appid != '':
+      exception('contain', int(appid), list(self.get_all_appid()['appid']), 
+        f"{appid} is not a valid appid. Please check the complete list using get_all_appid().")
+      
+    api = ""
+    driver = webdriver.Chrome()
+    driver.get('https://steamcommunity.com/market/listings/' + appid + '/' + item_name)
+
+    for request in driver.requests:
+        if request.response:
+          if str(request.url[34:53]) == 'itemordershistogram':
+            api = request.url
+            bodyObject = request.response.body
+            break
+
+    exception('network', api, "", "Steam cannot make this query. Please double check the item name and try again.")
+    response = requests.get(api + '&norender=1', headers=self.headers, timeout=1.0)
+    contentObject = response.content
+    exception('network', str(response.content), 'b\'null\'', "You have reached the request limit of Steam. Please try again later.")
+    dfSellGraph = pd.json_normalize(json.loads(contentObject), record_path=['sell_order_graph'])
+    dfBuyGraph = pd.json_normalize(json.loads(contentObject), record_path=['buy_order_graph'])
+    
+    dfSellGraph['type'] = 'sell'
+    dfBuyGraph['type'] = 'buy'
+    if 'success' in contentObject:
+      isSuccess = contentObject['success']
+      exception('network', isSuccess, False, "Steam cannot make this API call. Please double check your parameters and try again.")
+    dfCombined = [dfSellGraph, dfBuyGraph]
+    return pd.concat(dfCombined, ignore_index=True)
   
+  def get_itemname_id(self, item_name: str, appid: str):
+    """
+    """
+    exception('type', item_name, str, "Input item_name it not a valid string type.")
+    exception('type', appid, str, "Input appid it not a valid string type.")
+    exception('network', self.headers['Cookie'], '', 
+      "Cookie not authorized. Please set your steamLoginSecure first using set_steam_auth().")
+    if appid != '':
+      exception('contain', int(appid), list(self.get_all_appid()['appid']), 
+        f"{appid} is not a valid appid. Please check the complete list using get_all_appid().")
+      
+    api = ""
+    id = ""
+    driver = webdriver.Chrome()
+    driver.get('https://steamcommunity.com/market/listings/' + appid + '/' + item_name)
+    for request in driver.requests:
+        if request.response:
+          if str(request.url[34:53]) == 'itemordershistogram':
+            api = request.url
+            id = api.split('&')[-2]
+            break
+    exception('network', api, "", "Steam cannot make this query. Please double check the item name and try again.")
+    return id
