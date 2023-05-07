@@ -10,7 +10,7 @@ warnings.simplefilter(action = "ignore", category = RuntimeWarning)
 
 class Request:
 
-  def __init__(self):
+  def __init__(self, steamLoginSecure: str):
     self.headers = {
       'Cookie': ''
     }
@@ -21,6 +21,12 @@ class Request:
     self.__listingshistory_api = 'https://steamcommunity.com/market/myhistory/render/?norender=1'
     self.__appdetails_api = 'https://store.steampowered.com/api/appdetails/'
 
+    exception('type', steamLoginSecure, str, "Input steamLoginSecure it not a valid string type.")
+    header = 'steamLoginSecure=' + steamLoginSecure + ';'
+    testApi = 'https://steamcommunity.com/market/pricehistory/?appid=730&market_hash_name=P90%20%7C%20Blind%20Spot%20(Field-Tested)'
+    requestObject = requests.get(testApi, headers={'Cookie': header}, timeout=1.0).content
+    exception('network', str(requestObject), 'b\'[]\'', "Input header it not an authorized cookie header.")
+    self.headers['Cookie'] = header
 
   def set_steam_auth(self, steamLoginSecure: str):
     """
