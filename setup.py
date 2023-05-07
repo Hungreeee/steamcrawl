@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setup(
     name='steammy',
-    version='0.1.3',
+    version='0.1.4',
     description='A package that helps extract Steam market data as pandas DataFrame for better readabilty and usage.',
     packages=["steammy"],
     long_description=long_description,
