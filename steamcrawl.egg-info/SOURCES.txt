@@ -1,0 +1,12 @@
+LICENSE
+README.md
+setup.py
+steamcrawl/__init__.py
+steamcrawl/exceptions.py
+steamcrawl/request.py
+steamcrawl/requestCounter.py
+steamcrawl.egg-info/PKG-INFO
+steamcrawl.egg-info/SOURCES.txt
+steamcrawl.egg-info/dependency_links.txt
+steamcrawl.egg-info/requires.txt
+steamcrawl.egg-info/top_level.txt

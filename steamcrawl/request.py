@@ -328,10 +328,10 @@ class Request:
 
     exception('network', api, "", "Steam cannot make this query. Please double check the item name and try again.")
     response = requests.get(api + '&norender=1', headers=self.headers, timeout=1.0)
-    contentObject = response.content
     exception('network', str(response.content), 'b\'null\'', "You have reached the request limit of Steam. Please try again later.")
-    dfSellGraph = pd.json_normalize(json.loads(contentObject), record_path=['sell_order_graph'])
-    dfBuyGraph = pd.json_normalize(json.loads(contentObject), record_path=['buy_order_graph'])
+    contentObject = json.loads(response.content)
+    dfSellGraph = pd.json_normalize(contentObject, record_path=['sell_order_graph'])
+    dfBuyGraph = pd.json_normalize(contentObject, record_path=['buy_order_graph'])
     
     dfSellGraph['type'] = 'sell'
     dfBuyGraph['type'] = 'buy'
@@ -339,7 +339,9 @@ class Request:
       isSuccess = contentObject['success']
       exception('network', isSuccess, False, "Steam cannot make this API call. Please double check your parameters and try again.")
     dfCombined = [dfSellGraph, dfBuyGraph]
-    return pd.concat(dfCombined, ignore_index=True)
+    dfCombined = pd.concat(dfCombined, ignore_index=True)
+    dfCombined = dfCombined.rename(columns={0: 'price', 1: 'orders', 2: 'description'})
+    return dfCombined
   
   def get_itemname_id(self, item_name: str, appid: str):
     """
