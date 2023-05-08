@@ -13,7 +13,7 @@ With Steam request limit, you can make 200 requests every 5 minutes. If you exce
 
 ## Installation and setup
 
-The following library are used in the package.Thus, the requirement of their installation must be met:
+The following library are used in the package. Thus, the requirement of their installation must be met:
 
 - pandas==1.5.1
 - selenium-wire==5.1.0
@@ -58,7 +58,7 @@ The obtained result is (this is only part of the result):
 **Get buy/sell orders of an item:**
 
 ```python
-data_frame = get_buysell_orders(item_name = "USP-S | Printstream", appid="730")
+data_frame = get_buysell_orders(item_name = "USP-S | Printstream (Field-Tested)", appid="730")
 # appid 730 indicates Counter-Strike: Global Offensive game. 
 # Obtain the appid for a game using get_all_appid().
 data_frame.to_csv('example.csv')
@@ -69,6 +69,13 @@ The obtained result is (this is again only part of the result).
 ![](resources/example2.png)
 
 A small note is: please do not be alerted by the popping up browser for this request, this is only the behavior of the seleniumwire package used for this function.
+
+
+## Contributions:
+
+This project is created and managed by only one user Hungreeee. Therefore, errors are entirely possible to occur anywhere in the program. If you found any bug you would like to report, please open a new Issue.
+
+If you would like to suggest changes to current features or new features implementation, please also open a new Issue and I will check it out as soon as I can. 
 
 ## Legal
 
