@@ -16,8 +16,8 @@ With Steam request limit, you can make 200 requests every 5 minutes. If you exce
 The following library are used in the package. Thus, the requirement of their installation must be met:
 
 - pandas==1.5.1
-- selenium-wire==5.1.0
 - requests==2.29.0
+- selenium-wire==5.1.0
 
 You can download the package from PyPI using pip:
 
@@ -31,7 +31,7 @@ The package requires this value to be passed in order to return the data using t
 
 ## Documentation
 
-The documentation is available at the GitHub Wiki.
+The documentation is available at the [GitHub Wiki](https://github.com/Hungreeee/steamcrawl/wiki).
 
 ## Example 
 
@@ -68,8 +68,7 @@ The obtained result is (this is again only part of the result).
 
 ![](resources/example2.png)
 
-A small note is: please do not be alerted by the popping up browser for this request, this is only the behavior of the seleniumwire package used for this function.
-
+A small note is, please do not be alerted by the popping up browser for this request, this is only the behavior of the seleniumwire package used for this function.
 
 ## Contributions:
 
