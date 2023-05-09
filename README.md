@@ -7,13 +7,13 @@
 
 This is still a work in progress. Some functionality are available but not quite fully tested. The final version will be release as v1.0.0.
 
-A package that helps extract Steam store and community market data as pandas DataFrame for better readabilty and usability. The package mainlymake queries to different Steam api, clean and extract the important variables from the json object result and return a pandas Dataframe. 
+A package that helps extract Steam store and community market data as pandas DataFrame for better readability and usability. The package mainly makes queries to different Steam API, clean and extract the important variables from the JSON object result and return a pandas Dataframe. 
 
-With Steam request limit, you can make 200 requests every 5 minutes. If you exceed the limit, Steam can give you a cooldown of (possibly) a few 1,2 minutes to 6 hours (depends on the API). Please make an appropriate number of requests at a given time. It is recommended to close any Steam web and application to limit the requests you are sending.
+With the Steam request limit, you can make 200 requests every 5 minutes. If you exceed the limit, Steam can give you a cooldown of (possibly) a few 1,2 minutes to 6 hours (depending on the API). Please make an appropriate number of requests at a given time. It is recommended to close any Steam web and application to limit the requests you are sending.
 
 ## Installation and setup
 
-The following library are used in the package. Thus, the requirement of their installation must be met:
+The following libraries are used in the package. Thus, the requirement of their installation must be met:
 
 - pandas==1.5.1
 - requests==2.29.0
@@ -25,9 +25,9 @@ You can download the package from PyPI using pip:
 pip install steamcrawl
 ```
 
-Before starting, you need to obtain the value of the cookie `steamLoginSecure`. This can be done by opening DevTools (Ctrl + Shift + I) on steamcommunity.com, Application (on the task bar), Cookies.
+Before starting, you need to obtain the value of the cookie `steamLoginSecure`. This can be done by opening DevTools (Ctrl + Shift + I) on steamcommunity.com, Application (on the task bar), Cookies:
 
-The package requires this value to be passed in order to return the data using the information related to you (for example currency). Please be aware that it is absolutely safe to put your `steamLoginSecure` into the program. The package does not attempt to record/send to another source any of your information; even with your `steamLoginSecure` value, there is nothing another user can extract but your public market listing history, because it is all data that Steam permits user to get from its API.
+The package requires this value to be passed in order to return the data using the information related to you (for example currency). Please be aware that it is absolutely safe to put your `steamLoginSecure` into the program. The package does not attempt to record/send to another source any of your information; even with your `steamLoginSecure` value, there is nothing valuable another user can extract (for e.g make trades, credit card info, etc.) because Steam does not allow any important decisions being made throughout the API.
 
 ## Documentation
 

@@ -168,7 +168,7 @@ class Request:
 
     :param appid: The id of the app.
     :type appid: str
-    :return: List of all apps id.
+    :return: Details of the app with the given id.
     :rtype: pd.DataFrame
     """
 
@@ -216,7 +216,7 @@ class Request:
     return pd.json_normalize(contentObject).drop(['success'], axis=1)
     
 
-  def get_price_history(self, item_name: str, appid: str):
+  def get_price_history(self, item_name: str, appid: str) -> pd.DataFrame:
     """
     Get the price history of an item.
 
