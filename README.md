@@ -53,7 +53,7 @@ data_frame.to_csv('example.csv')
 
 The obtained result is (this is only part of the result):
 
-![](resources/example1.png)
+![example1](https://github.com/Hungreeee/steamcrawl/assets/46376260/110a98ca-d782-4e3c-aec1-e505cde27efd)
 
 **Get buy/sell orders of an item:**
 
@@ -66,7 +66,7 @@ data_frame.to_csv('example.csv')
 
 The obtained result is (this is again only part of the result). 
 
-![](resources/example2.png)
+![example2](https://github.com/Hungreeee/steamcrawl/assets/46376260/1879c84a-edcb-4c03-9f6a-b004dee69920)ources/example2.png)
 
 A small note is, please do not be alerted by the popping up browser for this request, this is only the behavior of the seleniumwire package used for this function.
 
