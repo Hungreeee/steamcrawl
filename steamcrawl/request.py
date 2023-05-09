@@ -11,6 +11,15 @@ warnings.simplefilter(action = "ignore", category = RuntimeWarning)
 class Request:
 
   def __init__(self, steamLoginSecure: str):
+    """
+    Initializing the class with steamLoginSecure and APIs
+
+    :param steamLoginSecure: The value of your steamLoginSecure cookie.
+    :type steamLoginSecure: str
+    :return: Nothing.
+    :rtype: None
+    """
+
     self.headers = {
       'Cookie': ''
     }
@@ -20,16 +29,19 @@ class Request:
     self.__item_overview_api = 'https://steamcommunity.com/market/priceoverview/'
     self.__listingshistory_api = 'https://steamcommunity.com/market/myhistory/render/?norender=1'
     self.__appdetails_api = 'https://store.steampowered.com/api/appdetails/'
+    self.__inventory_api = 'https://steamcommunity.com/inventory/'
 
-    exception('type', steamLoginSecure, str, "Input steamLoginSecure it not a valid string type.")
-    header = 'steamLoginSecure=' + steamLoginSecure + ';'
-    testApi = 'https://steamcommunity.com/market/pricehistory/?appid=730&market_hash_name=P90%20%7C%20Blind%20Spot%20(Field-Tested)'
-    requestObject = requests.get(testApi, headers={'Cookie': header}, timeout=1.0).content
-    exception('network', str(requestObject), 'b\'[]\'', "Input header it not an authorized cookie header.")
-    self.headers['Cookie'] = header
+    self.set_steam_auth(steamLoginSecure)
+
 
   def set_steam_auth(self, steamLoginSecure: str):
     """
+    Set the steamLoginSecure id as headers.
+
+    :param steamLoginSecure: The value of your steamLoginSecure cookie.
+    :type steamLoginSecure: str
+    :return: Nothing.
+    :rtype: None
     """
     exception('type', steamLoginSecure, str, "Input steamLoginSecure it not a valid string type.")
     header = 'steamLoginSecure=' + steamLoginSecure + ';'
@@ -41,6 +53,18 @@ class Request:
 
   def __request_helper(self, api: str, params: dict, headers: dict, index: list):
     """
+    Helper function to make requests.
+
+    :param api: The requested API URL.
+    :type api: str
+    :param params: The parameters of the request.
+    :type params: dict
+    :param headers: The headers of the request.
+    :type headers: dict
+    :param index: List of indices that needs to be extracted.
+    :type index: list
+    :return: Nothing.
+    :rtype: None
     """
     dfGather = []
     requestObject = requests.get(api, params=params, headers=headers, timeout=1.0)
@@ -61,9 +85,22 @@ class Request:
 
     return dfGather
 
-  def get_all_listings(self, sortby: str='default', sortdir: str='desc', appid: str='', count: int=100):
+  def get_listings(self, sortby: str='default', sortdir: str='desc', appid: str='', count: int=100) -> pd.DataFrame:
     """
+    Get listings of items as in the community market listing
+
+    :param sortby: Type of listings sorting. This includes 'default', 'price', 'quantity', and 'name'. The default value is 'default'.
+    :type sortby: str
+    :param sortdir: Direction of listings sorting. This includes 'asc' and 'desc'. The default value is 'desc'.
+    :type sortby: str
+    :param appid: Filter by app, given the id.
+    :type appid: str
+    :param count: Number of item listings to be displayed. The default value is 100.
+    :type count: int
+    :return: Listings of items given the chosen filters (parameters).
+    :rtype: pd.DataFrame
     """
+
     exception('type', sortby, str, "Input sortby it not a valid string type.")
     exception('type', sortdir, str, "Input sortdir it not a valid string type.")
     exception('type', count, int, "Input count it not a valid integer type.")
@@ -99,6 +136,7 @@ class Request:
 
       for i in range(0, count - remainCount, 100):
         params['start'] = i
+
         jsonObject = self.__request_helper(self.__all_listings_api, params, self.headers, ['results'])[0]
         dfCombined.append(pd.json_normalize(jsonObject))
 
@@ -112,16 +150,28 @@ class Request:
         return pd.concat(dfCombined, ignore_index=True)
     
 
-  def get_all_appid(self):
+  def get_all_appid(self) -> pd.DataFrame:
     """
+    Get the list of all apps id
+
+    :return: List of all apps id.
+    :rtype: pd.DataFrame
     """
+    
     jsonObject = self.__request_helper(self.__appid_api, {}, self.headers, ['applist'])[0]['apps']
     return pd.json_normalize(jsonObject)
   
   
   def get_app_details(self, appid: str):
     """
+    Get the details of an app given its id.
+
+    :param appid: The id of the app.
+    :type appid: str
+    :return: List of all apps id.
+    :rtype: pd.DataFrame
     """
+
     exception('type', appid, str, "Input appid it not a valid string type.")
     if appid != '':
       exception('contain', int(appid), list(self.get_all_appid()['appid']), 
@@ -135,9 +185,18 @@ class Request:
     return pd.json_normalize(jsonObject)
   
 
-  def get_item_overview(self, item_name: str, appid: str):
+  def get_item_overview(self, item_name: str, appid: str) -> pd.DataFrame:
     """
+    Get the overview (median price, volume) of an item.
+
+    :param item_name: The precise market name of the item.
+    :type item_name: str
+    :param appid: The id of the app.
+    :type appid: str
+    :return: The overview (median price, volume) of an item.
+    :rtype: pd.DataFrame
     """
+
     exception('type', item_name, str, "Input item_name it not a valid string type.")
     exception('type', appid, str, "Input appid it not a valid string type.")
     exception('network', self.headers['Cookie'], '', 
@@ -159,7 +218,16 @@ class Request:
 
   def get_price_history(self, item_name: str, appid: str):
     """
+    Get the price history of an item.
+
+    :param item_name: The precise market name of the item.
+    :type item_name: str
+    :param appid: The id of the app.
+    :type appid: str
+    :return: The price history of an item.
+    :rtype: pd.DataFrame
     """
+
     exception('type', item_name, str, "Input item_name it not a valid string type.")
     exception('type', appid, str, "Input appid it not a valid string type.")
     exception('network', self.headers['Cookie'], '', 
@@ -183,13 +251,29 @@ class Request:
 
   def __move_column_inplace(self, df, col, pos):
     """
+    Helper function to move columns of a data frame to a specified position.
+
+    :param df: The data frame that needs to move columns.
+    :type df: pd.DataFrame
+    :param col: The name of the column that needs to be moved.
+    :type col: str
+    :param pos: The new index that the column is going to move to.
+    :type pos: int
+    :return: Nothing.
+    :rtype: None
     """
     col = df.pop(col)
     df.insert(pos, col.name, col)
 
 
-  def __market_history_helper(self, index: list):
+  def __market_history_helper(self, index: list) -> pd.DataFrame:
     """
+    Helper function to extract market history.
+
+    :param index: List of indices that needs to be extracted.
+    :type index: list
+    :return: The extracted data as a data frame.
+    :rtype: pd.DataFrame
     """
     dfCombinedAssets = []
     dfCombinedEvents = []
@@ -265,9 +349,16 @@ class Request:
       return dfCombined
 
 
-  def get_market_history(self, count: int):
+  def get_market_history(self, count: int) -> pd.DataFrame:
     """
+    Get the market trading history of the user.
+
+    :param count: The number of entries that needs to be extracted from the market history.
+    :type count: int
+    :return: The market trading history of the user.
+    :rtype: pd.DataFrame
     """
+
     exception('type', count, int, "Input count it not a valid integer type.")
     exception('network', self.headers['Cookie'], '', 
       "Cookie not authorized. Please set your steamLoginSecure first using set_steam_auth().")
@@ -304,9 +395,18 @@ class Request:
         dfCombined.append(self.__market_history_helper(jsonObjectList))
         return pd.concat(dfCombined).reset_index(drop=True)
       
-  def get_buysell_orders(self, item_name: str, appid: str): 
+  def get_buysell_orders(self, item_name: str, appid: str) -> pd.DataFrame: 
     """
+    Get the buy/sell orders of an item in the market.
+
+    :param item_name: The precise market name of the item.
+    :type item_name: str
+    :param appid: The id of the app.
+    :type appid: str
+    :return: The buy/sell orders of an item in the market.
+    :rtype: pd.DataFrame
     """
+
     exception('type', item_name, str, "Input item_name it not a valid string type.")
     exception('type', appid, str, "Input appid it not a valid string type.")
     exception('network', self.headers['Cookie'], '', 
@@ -323,9 +423,7 @@ class Request:
         if request.response:
           if str(request.url[34:53]) == 'itemordershistogram':
             api = request.url
-            bodyObject = request.response.body
             break
-
     exception('network', api, "", "Steam cannot make this query. Please double check the item name and try again.")
     response = requests.get(api + '&norender=1', headers=self.headers, timeout=1.0)
     exception('network', str(response.content), 'b\'null\'', "You have reached the request limit of Steam. Please try again later.")
@@ -343,9 +441,18 @@ class Request:
     dfCombined = dfCombined.rename(columns={0: 'price', 1: 'orders', 2: 'description'})
     return dfCombined
   
-  def get_itemname_id(self, item_name: str, appid: str):
+  def get_itemname_id(self, item_name: str, appid: str) -> str:
     """
+    Get the id of an item given its name.
+
+    :param item_name: The precise market name of the item.
+    :type item_name: str
+    :param appid: The id of the app.
+    :type appid: str
+    :return: The id of an item given its name.
+    :rtype: str
     """
+
     exception('type', item_name, str, "Input item_name it not a valid string type.")
     exception('type', appid, str, "Input appid it not a valid string type.")
     exception('network', self.headers['Cookie'], '', 
@@ -362,7 +469,40 @@ class Request:
         if request.response:
           if str(request.url[34:53]) == 'itemordershistogram':
             api = request.url
-            id = api.split('&')[-2]
+            id = api.split('&')[-2][12:]
             break
     exception('network', api, "", "Steam cannot make this query. Please double check the item name and try again.")
     return id
+  
+  def get_game_item_inventory(self, steamId: str, appid: str, count: int) -> pd.DataFrame:
+    """
+    Get the game items from the inventory of an user.
+
+    :param steamId: The Steam ID64 of the user.
+    :type steamId: str
+    :param appid: The id of the app.
+    :type appid: str
+    :param count: The number of entries that needs to be extracted from the inventory.
+    :type count: int
+    :return: The game items from the inventory of an user.
+    :rtype: pd.DataFrame
+    """
+    
+    exception('type', steamId, str, "Input steamId it not a valid string type.")
+    exception('type', appid, str, "Input appid it not a valid string type.")
+    exception('type', count, int, "Input appid it not a valid string type.")
+    exception('network', self.headers['Cookie'], '', 
+      "Cookie not authorized. Please set your steamLoginSecure first using set_steam_auth().")
+    if appid != '':
+      exception('contain', int(appid), list(self.get_all_appid()['appid']), 
+        f"{appid} is not a valid appid. Please check the complete list using get_all_appid().")
+      
+    params = {
+      'count': count
+    }
+    
+    jsonObject = self.__request_helper(self.__inventory_api + '/' + steamId + '/' + appid + '/2', params, self.headers, ['descriptions'])[0]
+    df = pd.json_normalize(jsonObject)
+    df = df.drop(columns=['background_color'], axis=1)
+    return df
+
