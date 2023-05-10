@@ -23,7 +23,7 @@ class Request:
     self.headers = {
       'Cookie': ''
     }
-    self.__all_listings_api = 'https://steamcommunity.com/market/search/render/?search_descriptions=0&norender=1'
+    self.__all_listings_api = 'https://steamcommunity.com/market/search/render/?search_descriptions=0'
     self.__appid_api = 'https://api.steampowered.com/ISteamApps/GetAppList/v2/'
     self.__pricehistory_api = 'https://steamcommunity.com/market/pricehistory/'
     self.__item_overview_api = 'https://steamcommunity.com/market/priceoverview/'
@@ -43,11 +43,13 @@ class Request:
     :return: Nothing.
     :rtype: None
     """
+
     exception('type', steamLoginSecure, str, "Input steamLoginSecure it not a valid string type.")
     header = 'steamLoginSecure=' + steamLoginSecure + ';'
     testApi = 'https://steamcommunity.com/market/pricehistory/?appid=730&market_hash_name=P90%20%7C%20Blind%20Spot%20(Field-Tested)'
-    requestObject = requests.get(testApi, headers={'Cookie': header}, timeout=1.0).content
-    exception('network', requestObject, [], "Input header it not an authorized cookie header.")
+    requestObject = requests.get(testApi, headers={'Cookie': header}).content
+    jsonObject = json.loads(requestObject)
+    exception('network', jsonObject, [], "Input header it not an authorized cookie header.")
     self.headers['Cookie'] = header
 
 
@@ -66,8 +68,9 @@ class Request:
     :return: Nothing.
     :rtype: None
     """
+
     dfGather = []
-    requestObject = requests.get(api, params=params, headers=headers, timeout=1.0)
+    requestObject = requests.get(api, params=params, headers=headers)
     contentObject = json.loads(requestObject.content)
 
     for i in index:
@@ -75,27 +78,98 @@ class Request:
         if contentObject[i] != []:
           dfGather.append(contentObject[i])
 
+    exception('network', dfGather, [], "No information for this API call. Please double check your parameters and try again.")
+
     if 'success' in contentObject:
       isSuccess = contentObject['success']
       exception('network', isSuccess, False, "Steam cannot make this API call. Please double check your parameters and try again.")
+
+    elif 'success' in contentObject[index[0]]:
+      isSuccess = contentObject[index[0]]['success']
+      exception('network', isSuccess, False, "There is no information for this app.")
+      exception('network', isSuccess, 0, "There is no information for this app.")
     
     if 'total_count' in contentObject and 'count' in params:
       maxPage = contentObject['total_count']
       exception('exceed', params['count'], maxPage, f"{params['count']} is larger than the maximum number of count {maxPage}.")
 
+    elif 'total_inventory_count' in contentObject and 'count' in params:
+      maxPage = contentObject['total_inventory_count']
+      exception('exceed', params['count'], maxPage, f"{params['count']} is larger than the maximum number of count {maxPage}.")
+
     return dfGather
-
-  def get_listings(self, sortby: str='default', sortdir: str='desc', appid: str='', count: int=100) -> pd.DataFrame:
+  
+  
+  def get_all_listings(self, sortby: str='', sortdir: str='desc', count: int = 100) -> pd.DataFrame:
     """
-    Get listings of items as in the community market listing
+    Get listings of items exactly as how they are ordered in the community market.
 
-    :param sortby: Type of listings sorting. This includes 'default', 'price', 'quantity', and 'name'. The default value is 'default'.
+    :param sortby: Type of listings sorting. This includes '', 'price', and 'quantity'. The default value is ''.
+    :type sortby: str
+    :param sortdir: Direction of listings sorting. This includes 'asc' and 'desc'. The default value is 'desc'.
+    :type sortby: str
+    :param count: Number of item listings from the default list to be displayed. The default value is 100.
+    :type count: int
+    :return: Listings of items (given by count).
+    :rtype: pd.DataFrame
+    """
+    exception('type', sortby, str, "Input sortby it not a valid string type.")
+    exception('type', sortdir, str, "Input sortdir it not a valid string type.")
+    exception('type', count, int, "Input count it not a valid integer type.")
+    exception('contain', sortby, ['price', 'quantity', ''], 
+      f"{sortby} is not valid as a sortby type. It should only be '', 'price', or 'quantity'.")
+    exception('contain', sortdir, ['desc', 'asc'], 
+      f"{sortdir} is not valid as a sortby type. It should only be 'desc' or 'asc'.")
+    
+    params = {
+      'sort_column': sortby,
+      'sort_dir': '',
+      'start': 0, 
+      'count': count,
+      'norender': 1
+    }
+
+    jsonObject = self.__request_helper(self.__all_listings_api, params, self.headers, ['results'])[0]
+
+    if count == 0:
+      return pd.DataFrame()
+    
+    if count <= 100: 
+      return pd.json_normalize(jsonObject)
+    
+    else:
+      remainCount = count % 100
+      params['count'] = 100
+      dfCombined = []
+
+      for i in range(0, count - remainCount, 100):
+        params['start'] = i
+
+        jsonObject = self.__request_helper(self.__all_listings_api, params, self.headers, ['results'])[0]
+        dfCombined.append(pd.json_normalize(jsonObject))
+
+      if remainCount == 0:
+        return pd.concat(dfCombined, ignore_index=True)
+      
+      else:
+        params['start'] = count - remainCount
+        params['count'] = remainCount
+        jsonObject = self.__request_helper(self.__all_listings_api, params, self.headers, ['results'])[0]
+        dfCombined.append(pd.json_normalize(jsonObject))
+        return pd.concat(dfCombined, ignore_index=True)
+
+
+  def get_app_listings(self, appid: str, sortby: str='', sortdir: str='desc', count: int=100) -> pd.DataFrame:
+    """
+    Get listings of items from a specific app exactly as how they are ordered in the community market listing.
+
+    :param sortby: Type of listings sorting. This includes '', 'price', 'quantity', and 'name'. The default value is ''.
     :type sortby: str
     :param sortdir: Direction of listings sorting. This includes 'asc' and 'desc'. The default value is 'desc'.
     :type sortby: str
     :param appid: Filter by app, given the id.
     :type appid: str
-    :param count: Number of item listings to be displayed. The default value is 100.
+    :param count: Number of item listings from the default list to be displayed. The default value is 100.
     :type count: int
     :return: Listings of items given the chosen filters (parameters).
     :rtype: pd.DataFrame
@@ -105,8 +179,8 @@ class Request:
     exception('type', sortdir, str, "Input sortdir it not a valid string type.")
     exception('type', count, int, "Input count it not a valid integer type.")
     exception('type', appid, str, "Input appid it not a valid string type.")
-    exception('contain', sortby, ['default', 'price', 'quantity', 'name'], 
-      f"{sortby} is not valid as a sortby type. It should only be 'default', 'price', 'quantity', or 'name'.")
+    exception('contain', sortby, ['price', 'quantity', 'name', ''], 
+      f"{sortby} is not valid as a sortby type. It should only be '', 'price', 'quantity', or 'name'.")
     exception('contain', sortdir, ['desc', 'asc'], 
       f"{sortdir} is not valid as a sortby type. It should only be 'desc' or 'asc'.")
     if appid != '':
@@ -114,11 +188,12 @@ class Request:
         f"{appid} is not a valid appid. Please check the complete list using get_all_appid().")
     
     params = {
-      'sortcolumn': sortby,
-      'sortdir': sortdir,
+      'sort_column': sortby,
+      'sort_dir': '',
       'appid': appid,
       'start': 0, 
-      'count': count
+      'count': count,
+      'norender': 1
     }
 
     jsonObject = self.__request_helper(self.__all_listings_api, params, self.headers, ['results'])[0]
@@ -181,8 +256,8 @@ class Request:
       'appids': appid
     }
 
-    jsonObject = self.__request_helper(self.__appdetails_api, params, self.headers, [appid])[0]['data']
-    return pd.json_normalize(jsonObject)
+    jsonObject = self.__request_helper(self.__appdetails_api, params, self.headers, [appid])[0]
+    return pd.json_normalize(jsonObject['data'])
   
 
   def get_item_overview(self, item_name: str, appid: str) -> pd.DataFrame:
@@ -209,11 +284,13 @@ class Request:
       'appid': appid,
       'market_hash_name': item_name
     }
-    requestObject = requests.get(self.__item_overview_api, params=params, headers=self.headers, timeout=1.0)
-    contentObject = json.loads(requestObject.content)
-    isSuccess = contentObject['success']
+
+    requestObject = requests.get(self.__item_overview_api, params=params, headers=self.headers)
+    jsonObject = json.loads(requestObject.content)
+    exception('contain', 'volume', jsonObject, "No information for this item.")
+    isSuccess = jsonObject['success']
     exception('network', isSuccess, False, "Steam cannot make this API call. Please double check your parameters and try again.")
-    return pd.json_normalize(contentObject).drop(['success'], axis=1)
+    return pd.json_normalize(jsonObject).drop(['success'], axis=1)
     
 
   def get_price_history(self, item_name: str, appid: str) -> pd.DataFrame:
@@ -262,6 +339,7 @@ class Request:
     :return: Nothing.
     :rtype: None
     """
+    
     col = df.pop(col)
     df.insert(pos, col.name, col)
 
@@ -275,6 +353,7 @@ class Request:
     :return: The extracted data as a data frame.
     :rtype: pd.DataFrame
     """
+
     dfCombinedAssets = []
     dfCombinedEvents = []
     dfCombinedListings = []
@@ -299,7 +378,7 @@ class Request:
     for key in index[2]:
       dfCombinedListings.append(pd.json_normalize(index[2][key]))
     dfCombinedListings = pd.concat(dfCombinedListings)
-    dfCombinedListings = dfCombinedListings.drop(['currencyid', 'asset.contextid', 'asset.appid', 'asset.currency', 'steam_fee', 'publisher_fee', 'publisher_fee_percent', 'publisher_fee_app', 'price', 'fee', 'asset.amount'], axis=1)
+    dfCombinedListings = dfCombinedListings.drop(['currencyid', 'asset.contextid', 'asset.appid', 'asset.currency', 'publisher_fee_percent', 'publisher_fee_app', 'price', 'asset.amount'], axis=1)
 
     if len(index) == 4:
       for key in index[3]:
@@ -390,6 +469,7 @@ class Request:
         return pd.concat(dfCombined).reset_index(drop=True)
       
       else:
+        params['start'] = count - remainCount
         params['count'] = remainCount
         jsonObjectList = self.__request_helper(self.__listingshistory_api, params, self.headers, ['assets', 'events', 'listings', 'purchases'])
         dfCombined.append(self.__market_history_helper(jsonObjectList))
@@ -425,7 +505,7 @@ class Request:
             api = request.url
             break
     exception('network', api, "", "Steam cannot make this query. Please double check the item name and try again.")
-    response = requests.get(api + '&norender=1', headers=self.headers, timeout=1.0)
+    response = requests.get(api + '&norender=1', headers=self.headers)
     exception('network', str(response.content), 'b\'null\'', "You have reached the request limit of Steam. Please try again later.")
     contentObject = json.loads(response.content)
     dfSellGraph = pd.json_normalize(contentObject, record_path=['sell_order_graph'])
