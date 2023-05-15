@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setup(
     name='steamcrawl',
-    version='0.2.0',
+    version='1.0.0',
     description='A package that helps extract Steam store and community market data as pandas DataFrame for better readabilty and usability.',
     packages=["steamcrawl"],
     long_description=long_description,

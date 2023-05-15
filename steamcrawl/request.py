@@ -72,6 +72,7 @@ class Request:
     dfGather = []
     requestObject = requests.get(api, params=params, headers=headers)
     contentObject = json.loads(requestObject.content)
+    exception('network', contentObject, None, "No information for this API call. Please double check your parameters and try again.")
 
     for i in index:
       if i in contentObject:
@@ -123,7 +124,7 @@ class Request:
     
     params = {
       'sort_column': sortby,
-      'sort_dir': '',
+      'sort_dir': sortdir,
       'start': 0, 
       'count': count,
       'norender': 1
@@ -189,7 +190,7 @@ class Request:
     
     params = {
       'sort_column': sortby,
-      'sort_dir': '',
+      'sort_dir': sortdir,
       'appid': appid,
       'start': 0, 
       'count': count,

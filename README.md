@@ -5,8 +5,6 @@
 
 # steamcrawl
 
-This is still a work in progress. Some functionality are available but not quite fully tested. The final version will be release as v1.0.0.
-
 A package that helps extract Steam store and community market data as pandas DataFrame for better readability and usability. The package makes queries to different Steam API, clean and extract the important variables from the JSON object result and return a pandas Dataframe. 
 
 With the Steam request limit, you can make 200 requests every 5 minutes. If you exceed the limit, Steam can give you a cooldown of (possibly) a few 1,2 minutes to 6 hours (depending on the API). Please make an appropriate number of requests at a given time. It is recommended to close any Steam web and application to limit the requests you are sending.
