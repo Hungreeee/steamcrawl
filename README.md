@@ -27,6 +27,8 @@ Before starting, you need to obtain the value of the cookie `steamLoginSecure`. 
 
 The package requires this value to be passed in order to return the data using the information related to you (for example currency). Please be aware that it is absolutely safe to put your `steamLoginSecure` into the program. The package does not attempt to record/send to another source any of your information; even with your `steamLoginSecure` value, there is nothing valuable another user can extract (for e.g make trades, credit card info, etc.) because Steam does not allow any important decisions being made throughout the API.
 
+Please do note that the value of `steamLoginSecure` refreshes by Steam once a day. You will have to update the new cookie (using the same method) into the program if you want to keep using it.
+
 ## Documentation
 
 The documentation is available at the [GitHub Wiki](https://github.com/Hungreeee/steamcrawl/wiki).
