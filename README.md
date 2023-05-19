@@ -31,7 +31,7 @@ Please do note that the value of `steamLoginSecure` refreshes by Steam once a da
 
 ## Documentation
 
-The documentation is available at the [GitHub Wiki](https://github.com/Hungreeee/steamcrawl/wiki).
+The full documentation is available at the [GitHub Wiki](https://github.com/Hungreeee/steamcrawl/wiki).
 
 ## Example 
 
